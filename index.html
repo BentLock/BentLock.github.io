@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>이광호 포트폴리오</title>
+<meta name="description" content="오펜시브 보안 직무를 준비하는 이광호(BentLock)의 취약점 분석 포트폴리오">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#ffffff; --ink:#1a1d21; --muted:#5f6670; --rule:#e3e5e8; --soft:#f5f6f7;
+  --vuln:#b42318; --vuln-soft:#fdecea; --ok:#1d6b45; --ok-soft:#e8f4ee; --ph:#8a6d10;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#15171a;--ink:#e8eaed;--muted:#9aa1ab;--rule:#2c3036;--soft:#1d2024;
+        --vuln:#f97066;--vuln-soft:#3a1d1b;--ok:#6fcf97;--ok-soft:#17291f;--ph:#e8c95a;color-scheme:dark;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:16.5px/1.7 "Pretendard",-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  word-break:keep-all;overflow-wrap:break-word}
+.wrap{max-width:960px;margin:0 auto;padding-inline:24px}
+.prose{max-width:680px}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--muted);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--ink)}
+a:focus-visible{outline:2px solid var(--ink);outline-offset:3px;border-radius:2px}
+p{margin:0 0 1em} ul{margin:0 0 1em;padding-left:1.2em} li{margin:.35em 0}
+code,.cve-id,.cve-score{font-variant-ligatures:none;font-feature-settings:"calt" 0,"liga" 0}
+code{font-family:var(--mono);font-size:.84em;background:var(--soft);padding:.1em .35em;border-radius:4px}
+.code-fig{margin:20px 0}
+.code-fig pre{margin:0;padding:18px 20px;background:var(--soft);border-radius:8px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;line-height:1.65;
+  font-variant-ligatures:none;font-feature-settings:"calt" 0,"liga" 0;tab-size:4}
+.code-fig pre code{background:none;padding:0;font-size:inherit}
+.code-fig .c{color:var(--muted)}
+.code-fig .hl{display:inline-block;min-width:100%;background:var(--rule);border-radius:3px}
+.code-fig figcaption{font-size:14px;color:var(--muted);margin-top:8px}
+h2{font-size:15px;font-weight:600;color:var(--muted);margin:0 0 20px;letter-spacing:0}
+h3{font-size:24px;line-height:1.35;letter-spacing:-.02em;margin:0 0 8px}
+.meta{color:var(--muted);font-size:15px;margin:0 0 20px}
+
+.ph{color:var(--ph);font-weight:500}
+.ph-block{border:1.5px dashed var(--ph);border-radius:8px;padding:18px 20px;color:var(--ph);font-size:15px;margin:20px 0}
+
+/* header */
+.top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:24px;font-size:15px;color:var(--muted)}
+.top nav{display:flex;gap:18px;flex-wrap:wrap}
+.top nav a{text-decoration:none} .top nav a:hover{color:var(--ink)}
+header.intro{padding-block:56px 48px;display:grid;grid-template-columns:132px minmax(0,1fr);column-gap:36px;
+  grid-template-areas:"photo name" "photo lead" "photo sub" "photo btns";align-content:start}
+header.intro h1{grid-area:name;font-size:clamp(40px,6vw,60px);line-height:1.1;letter-spacing:-.04em;margin:0 0 20px}
+header.intro .lead{grid-area:lead} header.intro .sub{grid-area:sub} header.intro .contact-btns{grid-area:btns}
+.photo{grid-area:photo;align-self:start;width:132px;aspect-ratio:3/4;border-radius:8px;object-fit:cover}
+.photo-ph{display:grid;place-items:center;border:1.5px dashed var(--ph);color:var(--ph);font-size:13px;text-align:center;line-height:1.5}
+header.intro .lead{font-size:20px;line-height:1.6;max-width:30em;margin:0 0 16px}
+header.intro .sub{color:var(--muted);margin:0}
+.contact-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.btn{display:inline-flex;align-items:baseline;gap:10px;padding:10px 16px;border:1px solid var(--rule);border-radius:8px;
+  background:var(--bg);color:var(--ink);text-decoration:none;font-size:15px;line-height:1.4}
+.btn:hover{border-color:var(--ink);text-decoration:none}
+.btn-k{font-size:13px;font-weight:600;color:var(--muted)}
+@media (max-width:480px){.btn{width:100%}}
+
+/* CVE */
+.cve{padding-block:8px 56px}
+.cve-list{list-style:none;margin:0;padding:0;border-top:2px solid var(--ink)}
+.cve-list li{display:grid;grid-template-columns:190px 150px minmax(0,1fr) 48px;gap:6px 24px;align-items:baseline;
+  padding:18px 0;margin:0;border-bottom:1px solid var(--rule)}
+.cve-id{font:600 16px/1.4 var(--mono);color:var(--vuln);text-decoration:none}
+.cve-id:hover{text-decoration:underline}
+.cve-target{font-weight:600}
+.cve-desc{font-size:15.5px}
+.cve-desc .cwe{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+.cve-score{font:600 15px var(--mono);text-align:right}
+.cve-mine{grid-column:3 / 5;font-size:14.5px;color:var(--muted)}
+.cve-note{color:var(--muted);font-size:15px;margin-top:14px}
+
+/* featured projects */
+.feature{padding-block:56px;border-top:1px solid var(--rule)}
+.feature .used{font-size:14.5px;color:var(--muted);margin-top:20px}
+
+/* diagram: shared */
+.diagram{margin:28px 0 8px;padding:24px;background:var(--soft);border-radius:10px}
+.diagram figcaption{font-size:14px;color:var(--muted);margin-top:16px}
+
+/* diagram 1: verification pipeline */
+.pipe{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:0}
+.pipe.five{grid-template-columns:repeat(5,minmax(0,1fr))}
+.pipe li{position:relative;margin:0;padding:0 10px 0 0}
+.pipe .box{background:var(--bg);border:1px solid var(--rule);border-radius:8px;padding:12px 10px;min-height:96px;font-size:14px;line-height:1.45}
+.pipe .box b{display:block;font-size:14.5px;margin-bottom:4px}
+.pipe .box span{color:var(--muted);font-size:13px}
+.pipe li:not(:last-child)::after{content:"";position:absolute;right:1px;top:48px;width:8px;height:1px;background:var(--muted)}
+.pipe .gate .box{border:2px solid var(--ink)}
+.pipe.five .box{min-height:80px}
+.pipe .out{margin-top:8px;font-size:12.5px;color:var(--vuln);padding-left:2px}
+.pipe .loop{margin-top:8px;font-size:12.5px;color:var(--muted);padding-left:2px}
+.pipe .done .box{background:var(--ok-soft);border-color:var(--ok)}
+
+/* diagram 2: auth comparison */
+.compare{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}
+.lane{background:var(--bg);border:1px solid var(--rule);border-radius:8px;padding:18px}
+.lane h4{margin:0 0 14px;font-size:15px}
+.lane ol{list-style:none;margin:0;padding:0}
+.lane li{margin:0;padding:10px 0;border-top:1px dashed var(--rule);display:grid;grid-template-columns:96px minmax(0,1fr);gap:12px;font-size:14.5px}
+.lane li:first-child{border-top:0;padding-top:0}
+.lane .k{color:var(--muted)}
+.lane code{white-space:nowrap}
+.verdict{margin-top:14px;padding:10px 12px;border-radius:6px;font-weight:600;font-size:14.5px}
+.verdict.bad{background:var(--vuln-soft);color:var(--vuln)}
+.verdict.good{background:var(--ok-soft);color:var(--ok)}
+
+
+/* diagram 3: design comparison */
+.vs{display:grid;gap:0;background:var(--bg);border:1px solid var(--rule);border-radius:8px;overflow:hidden}
+.vs-row{display:grid;grid-template-columns:150px minmax(0,1fr) minmax(0,1fr);gap:0 20px;padding:14px 18px;border-top:1px solid var(--rule);font-size:14.5px}
+.vs-row:first-child{border-top:0}
+.vs-head{font-weight:600;font-size:14px;background:var(--soft)}
+.vs-row .k{color:var(--muted)}
+.vs-row.hl{box-shadow:inset 3px 0 0 var(--ink);font-weight:500}
+
+/* other experience */
+section.more{padding-block:56px;border-top:1px solid var(--rule)}
+.more-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:36px 48px}
+.more-list article h3{font-size:19px;margin-bottom:4px}
+.more-list article .meta{font-size:14px;margin-bottom:10px}
+.more-list article p{font-size:15.5px}
+
+/* history & skills: plain two-column rows */
+.rows{margin:0;padding:0;list-style:none}
+.rows li,.rows div{display:grid;grid-template-columns:200px minmax(0,1fr);gap:4px 32px;padding:14px 0;border-top:1px solid var(--rule);margin:0}
+.rows .when,.rows dt{color:var(--muted);font-size:15px}
+.rows dd{margin:0}
+.rows small{display:block;color:var(--muted);font-size:14.5px}
+
+footer{margin-top:40px;padding-block:28px 56px;border-top:2px solid var(--ink);font-size:14.5px;color:var(--muted)}
+footer .contact{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px;font-size:15.5px;color:var(--ink)}
+
+@media (max-width:860px){
+  .pipe,.pipe.five{grid-template-columns:1fr;gap:10px}
+  .pipe li{padding:0}
+  .pipe li:not(:last-child)::after{display:none}
+  .pipe .box{min-height:0}
+  .compare{grid-template-columns:1fr}
+  .vs-head{display:none}
+  .vs-row{grid-template-columns:1fr;gap:6px}
+  .vs-row span[role=cell]:nth-child(2)::before{content:"내 선행연구: ";font-weight:600}
+  .vs-row span[role=cell]:nth-child(3)::before{content:"ARTEX: ";font-weight:600}
+  .more-list{grid-template-columns:1fr}
+}
+@media (max-width:720px){
+  header.intro{padding-block:24px 36px;grid-template-columns:84px minmax(0,1fr);column-gap:20px;
+    grid-template-areas:"photo name" "lead lead" "sub sub" "btns btns"}
+  header.intro h1{align-self:center;margin:0}
+  .photo{width:84px;margin-bottom:20px}
+  .photo-ph{font-size:11px}
+  .cve-list li{grid-template-columns:minmax(0,1fr) auto;gap:2px 12px}
+  .cve-target{grid-column:1 / -1;order:2}
+  .cve-desc{grid-column:1 / -1;order:3}
+  .cve-mine{grid-column:1 / -1;order:4}
+  .rows li,.rows div{grid-template-columns:1fr}
+  .diagram{padding:16px}
+  .lane li{grid-template-columns:84px minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="top">
+  <span>BentLock</span>
+  <nav aria-label="페이지 목차">
+    <a href="#cve">CVE</a><a href="#signature">시그니처 개발</a><a href="#pipeline">AI 취약점 탐색</a><a href="#artex">ARTEX 분석</a><a href="#router">공유기 0-day</a><a href="#more">그 밖의 경험</a><a href="#history">이력</a>
+  </nav>
+</div>
+
+<main>
+<header class="intro">
+  <!-- 사진을 넣을 때: <img class="photo" src="files/photo.jpg" alt="이광호 증명사진"> 으로 아래 div를 교체 -->
+  <div class="photo photo-ph" role="img" aria-label="증명사진 자리">[PLACEHOLDER]<br>증명사진<br>3:4</div>
+  <h1>이광호</h1>
+  <p class="lead">취약점이 어떻게 성립하는지 많이 보고, 직접 찾아본 경험이 있습니다. 시큐아이에서 탐지 시그니처 약 600개를 개발하며 다양한 CVE를 원인부터 트리거 조건까지 분석했고, K-Shield 팀 프로젝트에서는 공유기 0-day를 찾아 CVE 3건을 받았습니다.</p>
+  <p class="sub">현재 시큐아이 인턴 (2026.03 – 2026.11), K-Shield 주니어 수료</p>
+  <div class="contact-btns">
+    <a class="btn" href="mailto:kjk05240@gmail.com"><span class="btn-k">Email</span>kjk05240@gmail.com</a>
+    <a class="btn" href="https://github.com/BentLock"><span class="btn-k">GitHub</span>github.com/BentLock</a>
+    <a class="btn" href="https://bentlock.tistory.com/"><span class="btn-k">Tech blog</span>bentlock.tistory.com</a>
+  </div>
+</header>
+
+<section class="cve" id="cve" aria-labelledby="cve-h">
+  <h2 id="cve-h">CVE</h2>
+  <ul class="cve-list">
+    <li>
+      <a class="cve-id" href="https://nvd.nist.gov/vuln/detail/CVE-2025-70327">CVE-2025-70327</a>
+      <span class="cve-target">TOTOLINK X5000R</span>
+      <span class="cve-desc">진단(ping) 기능의 <code>ip</code> 값이 <code>-</code>로 시작하는지 검사하지 않아 명령 옵션이 주입됨<span class="cwe">CWE-88 Argument Injection</span></span>
+      <span class="cve-score" aria-label="CVSS 3.1 점수">9.8</span>
+      <span class="cve-mine">나의 기여: 원인 분석과 인증 흐름 검증 &nbsp;/&nbsp; <a href="https://github.com/neighborhood-H/0-DAY/blob/main/Toto-link/X5000R/SetDiagnosisCfg/report.md">팀 분석 보고서</a></span>
+    </li>
+    <li>
+      <a class="cve-id" href="https://nvd.nist.gov/vuln/detail/CVE-2025-70328">CVE-2025-70328</a>
+      <span class="cve-target">TOTOLINK X6000R</span>
+      <span class="cve-desc">NTP 시간 동기화 기능의 <code>host_time</code> 값이 앞 두 토큰만 검증된 채 <code>date -s</code> 명령에 들어감<span class="cwe">CWE-78 OS Command Injection</span></span>
+      <span class="cve-score" aria-label="CVSS 3.1 점수">8.8</span>
+      <span class="cve-mine">나의 기여: 원인 분석과 인증 흐름 검증 &nbsp;/&nbsp; <a href="https://github.com/neighborhood-H/0-DAY/blob/main/Toto-link/X6000R/NTPSyncWihtHost/report.md">팀 분석 보고서</a></span>
+    </li>
+    <li>
+      <a class="cve-id" href="https://nvd.nist.gov/vuln/detail/CVE-2025-70329">CVE-2025-70329</a>
+      <span class="cve-target">TOTOLINK X5000R</span>
+      <span class="cve-desc">IPTV 설정 기능의 <code>vlanVidLanX</code> 값이 검증 없이 시스템 명령에 들어가 root 권한으로 실행됨<span class="cwe">CWE-78 OS Command Injection</span></span>
+      <span class="cve-score" aria-label="CVSS 3.1 점수">8.0</span>
+      <span class="cve-mine">나의 기여: 원인 분석과 인증 흐름 검증 &nbsp;/&nbsp; <a href="https://github.com/neighborhood-H/0-DAY/blob/main/Toto-link/X5000R/SetIptvCfg/report.md">팀 분석 보고서</a></span>
+    </li>
+  </ul>
+  <p class="cve-note">K-Shield 주니어 6인 팀 프로젝트에서 찾아 2026년 2월에 공개됐습니다. 팀 저장소: <a href="https://github.com/neighborhood-H/0-DAY">github.com/neighborhood-H/0-DAY</a>. 숫자는 CVSS 3.1 점수입니다.</p>
+</section>
+
+<section class="feature" id="signature" aria-labelledby="sg-h">
+  <h2>주요 업무와 프로젝트</h2>
+  <div class="prose">
+    <h3 id="sg-h">CVE 분석을 통한 탐지 시그니처 개발</h3>
+    <p class="meta">2026.03 – 2026.11, (주)시큐아이 인턴 주 업무</p>
+    <p>공개된 CVE를 분석해 공격을 탐지하는 Snort 시그니처를 만들었습니다. 취약점마다 원인과 공격이 성립하는 조건을 먼저 정리하고, 이를 근거로 탐지 지점을 정해 시그니처를 작성했습니다. 이렇게 <strong>약 600개</strong>를 개발했습니다.</p>
+  </div>
+
+  <figure class="diagram">
+    <ol class="pipe five" aria-label="CVE 분석과 시그니처 개발 순서">
+      <li><div class="box"><b>공개 자료 확인</b><span>공개 PoC, 익스플로잇 코드, 패치 내용</span></div></li>
+      <li><div class="box"><b>원인과 위치</b><span>취약한 코드가 어디이고 왜 문제인지</span></div></li>
+      <li><div class="box"><b>동작 원리</b><span>입력이 어떤 경로로 취약 지점에 닿는지</span></div></li>
+      <li><div class="box"><b>공격 조건과 PoC</b><span>공격이 성립하는 전제와 실제 요청 형태</span></div></li>
+      <li class="gate"><div class="box"><b>탐지 시그니처</b><span>분석 근거로 탐지 지점을 정해 Snort 룰 작성</span></div></li>
+    </ol>
+    <figcaption>취약점 하나를 분석해 시그니처를 만드는 순서입니다.</figcaption>
+  </figure>
+  <div class="prose"><p class="used">Snort, CVE 분석, PoC 검증</p></div>
+</section>
+
+<section class="feature" id="pipeline" aria-labelledby="zd-h">
+  <div class="prose">
+    <h3 id="zd-h">AI 활용 화이트박스 취약점 탐색 파이프라인</h3>
+    <p class="meta">2026.06 – 2026.08, 1인 설계·개발, 시큐아이 선행연구</p>
+    <p>AI가 취약점이라고 판단해도 바로 믿지 않도록 만들었습니다. 후보는 실제 PoC 실행과 별도의 반박 검토를 둘 다 통과해야 보고서에 오릅니다. 앞 단계에서는 놓치는 취약점을 줄이는 데 집중하고, 잘못된 탐지는 뒤의 두 단계에서 걸러내도록 역할을 나눴습니다.</p>
+  </div>
+
+  <figure class="diagram">
+    <ol class="pipe" aria-label="취약점 탐색 파이프라인 검증 단계">
+      <li><div class="box"><b>정적 스캔</b><span>semgrep으로 위험한 지점에 입력이 닿는 후보 수집</span></div></li>
+      <li><div class="box"><b>후보 선별</b><span>공격이 불가능한 것만 제외</span></div></li>
+      <li><div class="box"><b>AI 분석</b><span>소스를 읽고 취약점 여부 판단</span></div></li>
+      <li><div class="box"><b>정적 검증</b><span>판단이 명백히 틀린 것만 탈락</span></div><div class="out">명백한 오판 탈락</div></li>
+      <li class="gate"><div class="box"><b>PoC 실행</b><span>격리 샌드박스에서 실제 공격 재현</span></div><div class="loop">실패하면 원인 진단 후 재시도</div></li>
+      <li class="gate"><div class="box"><b>반박 검토</b><span>다른 모델이 "틀렸다"는 전제로 재검토</span></div><div class="out">근거 부족 시 탈락</div></li>
+      <li class="done"><div class="box"><b>보고서</b><span>두 관문을 통과한 것만</span></div></li>
+    </ol>
+    <figcaption>굵은 테두리는 후보가 반드시 통과해야 하는 두 관문입니다. 취약점을 찾는 모델(Claude)과 반박하는 모델(Codex)을 다르게 두었습니다.</figcaption>
+  </figure>
+
+  <div class="prose">
+    <ul>
+      <li>로그인 폼을 자동으로 찾아 인증하는 기능을 넣어, 로그인 뒤에 있는 기능까지 검증할 수 있게 했습니다.</li>
+      <li>오픈소스 PHP 웹 애플리케이션 5종을 대상으로 반복 테스트하며 검증 단계를 다듬었습니다.</li>
+    </ul>
+    <p class="used">Python, semgrep, Playwright, Docker, Claude Code, Codex CLI</p>
+  </div>
+</section>
+
+<section class="feature" id="artex" aria-labelledby="ax-h">
+  <div class="prose">
+    <h3 id="ax-h">ARTEX 동작 원리 분석</h3>
+    <p class="meta">2026.10, 시큐아이 개별 업무, <a href="files/ARTEX-Analysis.pdf">분석 보고서 PDF</a></p>
+    <p>선행연구로 화이트박스 취약점 탐색 파이프라인을 만든 뒤, 여러 AI 에이전트가 스스로 침투테스트를 수행하는 오픈소스 도구 ARTEX를 분석해 보고서로 정리했습니다. 둘 다 AI로 취약점을 찾고 검증하지만 전제가 다릅니다. 제 파이프라인은 소스코드를 읽는 <b>화이트박스</b> 방식이고, ARTEX는 실행 중인 서비스에 요청을 보내며 단서를 찾는 <b>블랙박스</b> 방식입니다.</p>
+  </div>
+
+  <figure class="diagram">
+    <div class="vs" role="table" aria-label="선행연구와 ARTEX 설계 비교">
+      <div class="vs-row vs-head" role="row"><span role="columnheader"></span><span role="columnheader">내 선행연구</span><span role="columnheader">ARTEX</span></div>
+      <div class="vs-row" role="row"><span class="k" role="rowheader">전제</span><span role="cell">화이트박스: 소스코드를 읽고 위험한 지점을 찾음</span><span role="cell">블랙박스: 실행 중인 서비스에 요청을 보내 반응을 봄</span></div>
+      <div class="vs-row" role="row"><span class="k" role="rowheader">출발점</span><span role="cell">정적 스캔이 찾은 후보 코드 위치</span><span role="cell">접근 가능한 화면, API, 스크립트에서 찾은 단서</span></div>
+      <div class="vs-row hl" role="row"><span class="k" role="rowheader">긴 작업의 정보 관리</span><span role="cell">후보별, 단계별로 나눈 JSON으로 에이전트 사이 입출력과 공유 정보를 관리</span><span role="cell">조사 대상은 자산 그래프에, 시도한 가설과 그 결과는 탐색 그래프에 이어 두고 planner가 그래프를 읽어 다음 검사를 정함</span></div>
+      <div class="vs-row" role="row"><span class="k" role="rowheader">성공 판단</span><span role="cell">샌드박스 PoC 실행과 반박 검토를 모두 통과해야 확정</span><span role="cell">취약점 등록과 목표 달성 판정을 별도 단계로 두고, 실행 기록과 대조</span></div>
+    </div>
+    <figcaption>두 도구 모두 작업이 길어지면 에이전트가 앞선 정보를 놓치는 문제를 다룹니다. 강조한 줄이 그 해법의 차이입니다.</figcaption>
+  </figure>
+
+  <div class="prose">
+    <h4>분석한 내용</h4>
+    <ul>
+      <li>방향을 정하는 planner와 명령을 실행하는 worker가 일을 나누는 구조, 사람이 목표와 제약을 바꿀 때의 전달 경로</li>
+      <li>발견한 대상, 관찰한 사실, 재현한 취약점을 서로 다른 기록으로 남기고 그래프로 잇는 방식</li>
+      <li>다시 계획하거나 검사를 멈추는 조건, 목표 달성을 판정하는 기준</li>
+    </ul>
+    <h4>느낀 점</h4>
+    <p>작업이 길어질수록 커지는 컨텍스트를 저는 후보와 단계로 잘게 나눈 JSON으로 다뤘는데, ARTEX는 조사 대상과 가설, 결과를 그래프로 연결해 같은 문제를 풀었습니다. 같은 문제를 전혀 다른 구조로 해결한 점이 인상 깊었습니다.</p>
+    <p>또 블랙박스 진단 방법론을 잘 몰랐던 제게는 ARTEX가 판단하는 과정 자체가 공부가 되었습니다. 시험한 값으로 결론이 나지 않으면 입력 위치를 바꿔 다시 시도하고, 순차 요청이 막히면 동시 요청으로 방법을 바꾸고, 비교할 기준이 없는 검사는 멈추는 흐름을 따라가며 블랙박스에서 가설을 세우고 검증하는 순서를 익혔습니다.</p>
+    <p class="used">LLM 에이전트 구조 분석, Go 소스코드 분석, 기술 보고서 작성</p>
+  </div>
+</section>
+
+<section class="feature" id="router" aria-labelledby="rt-h">
+  <div class="prose">
+    <h3 id="rt-h">가정용 공유기 0-day 탐색</h3>
+    <p class="meta">약 2개월, 6인 팀, K-Shield 주니어</p>
+    <p>TOTOLINK X5000R, X6000R 펌웨어를 에뮬레이션 환경에서 분석해 팀이 0-day 3건을 찾았고, MITRE에서 CVE 3건을 받았습니다.</p>
+    <p>제가 맡은 일 중 가장 기억에 남는 것은 인증 조건을 다시 확인한 일입니다. 처음에는 로그인 없이 공격되는 취약점으로 보였습니다. 인증 로직을 끝까지 따라가 보니, 에뮬레이션 환경에서 세션 토큰이 비어 있어 비교가 통과된 것이었습니다. 이 원인을 밝혀 인증이 필요한 취약점(PR:L)으로 정리하는 데 기여했습니다.</p>
+  </div>
+
+  <figure class="diagram">
+    <div class="compare">
+      <div class="lane">
+        <h4>에뮬레이션 환경</h4>
+        <ol>
+          <li><span class="k">세션 토큰</span><span><code>""</code> 세션 파일이 만들어지지 않아 비어 있음</span></li>
+          <li><span class="k">요청 토큰</span><span><code>""</code> 로그인 없이 보내 비어 있음</span></li>
+          <li><span class="k">비교</span><span><code>strcmp("", "") == 0</code></span></li>
+        </ol>
+        <div class="verdict bad">인증 없이 통과한 것처럼 보임</div>
+      </div>
+      <div class="lane">
+        <h4>세션 토큰이 정상적으로 있을 때</h4>
+        <ol>
+          <li><span class="k">세션 토큰</span><span>로그인할 때 세션 파일에 저장된 값</span></li>
+          <li><span class="k">요청 토큰</span><span>로그인하지 않으면 값이 맞지 않음</span></li>
+          <li><span class="k">비교</span><span><code>strcmp(session, token) != 0</code></span></li>
+        </ol>
+        <div class="verdict good">로그인이 필요함 → PR:L</div>
+      </div>
+    </div>
+    <figcaption>인증 비교 로직을 단순화해 나타낸 그림입니다. 실제 펌웨어 코드가 아닙니다.</figcaption>
+  </figure>
+
+  <div class="prose">
+    <figure class="code-fig">
+<pre><code>bool sub_40BC2C(__int64 a1)   <span class="c">// 토큰 검증 함수</span>
+{
+    char s1[64];   <span class="c">// 요청에 담긴 token 값</span>
+    char s2[64];   <span class="c">// 서버가 저장한 session_id</span>
+
+    <span class="c">// 로그인 때 만들어지는 세션 파일에서 session_id를 읽음</span>
+    <span class="c">// 파일이 없으면 s2는 빈 문자열로 남음</span>
+    datconf_get_by_key("/var/cste/temp_status",
+                       "session_id", s2, 64);
+
+    <span class="c">// 요청 파라미터에서 token 값을 꺼냄 (token= 이면 "")</span>
+    sub_40BC08(a1, "token", s1, 64);
+
+<span class="hl">    return strcmp(s1, s2) == 0;   <span class="c">// "" == "" 이면 통과</span></span>
+}</code></pre>
+      <figcaption>펌웨어 웹 처리 바이너리의 토큰 검증 함수 (IDA 의사코드, 주석은 직접 추가)</figcaption>
+    </figure>
+    <p>요청을 처리하는 함수(<code>sub_40BCB8</code>)는 이 함수가 거짓을 돌려주면 <code>"token invalid"</code>로 요청을 거부합니다. 비교 대상인 세션 ID는 로그인할 때 만들어지는 <code>/var/cste/temp_status</code> 파일에서 읽는데, 에뮬레이션 환경에서는 로그인 과정이 돌지 않아 이 파일이 없었습니다. 실제 기기에서는 이 파일이 있어 올바른 토큰이 필요하므로, busybox 셸에서 세션 파일을 직접 만들어 실제 기기와 같은 조건에서 공격을 진행했습니다.</p>
+    <p class="used">펌웨어 에뮬레이션, QEMU, 정적 분석</p>
+  </div>
+</section>
+
+<section class="more" id="more" aria-labelledby="more-h">
+  <h2 id="more-h">그 밖의 경험</h2>
+  <div class="more-list">
+    <article>
+      <h3>IPS-허니팟 상관분석 SOAR 시스템</h3>
+      <p class="meta">2025, 4인 팀 (팀장), 졸업작품, <a href="https://github.com/BentLock/NSUCapstoneDesign">GitHub 저장소</a></p>
+      <p>물리 서버 3대(IPS, 허니팟, SOAR)를 연동하고 Docker 기반 SOAR 서버를 약 2개월 동안 만들었습니다. T-Pot과 ELK 버전 호환 문제, SSL 인증서 통신, Elasticsearch 메모리 부족 문제를 하나씩 해결했습니다.</p>
+    </article>
+    <article>
+      <h3>Suricata 기반 인라인 IPS 장비 구축</h3>
+      <p class="meta">2024.06 – 2024.07, 2인 1조, 울산정보산업진흥원 AIoT 정보보안 솔루션 과정 (80시간), <a href="https://alpine-freighter-351.notion.site/IPS-1f0b39dc6eec4e4fadee31cb3b4d459b">구축 과정 정리</a></p>
+      <p>미니 PC에 Ubuntu를 설치하고 Suricata를 소스에서 직접 컴파일해, 두 네트워크 인터페이스 사이에서 패킷을 검사하고 차단하는 인라인 IPS를 만들었습니다. 공개된 ET 룰을 적용하고 내부망과 외부망을 정의해 사용자 정의 룰을 더했으며, 재시작 없이 룰을 다시 불러오는 방법과 ELK 스택으로 탐지 로그를 모으는 구성까지 진행했습니다. 수업 뒤에는 다른 수강생도 따라 할 수 있도록 전체 과정을 문서로 정리해 공유했습니다.</p>
+    </article>
+    <article>
+      <h3>WannaCry 전파·드로퍼 모듈 정적 분석</h3>
+      <p class="meta">2026.01, 개인, IDA, <a href="https://github.com/BentLock/analysisWannacry">분석 보고서</a></p>
+      <p>WannaCry를 구성하는 두 실행 파일 중 가장 먼저 실행되는 <code>mssecsvc.exe</code>를 IDA로 함수 단위까지 분석했습니다. 킬 스위치 도메인 확인, 서비스 등록, 리소스에서 랜섬웨어 본체를 꺼내 실행하는 과정, 내부망과 무작위 공인 IP로 445번 포트를 찾아 <span style="white-space:nowrap">MS17-010</span>(EternalBlue)으로 퍼지는 흐름을 의사코드와 함께 정리했습니다. 파일을 암호화하는 본체(<code>tasksche.exe</code>)는 분석 범위에 넣지 않았습니다.</p>
+    </article>
+  </div>
+</section>
+
+<section class="more" id="history" aria-labelledby="hist-h">
+  <h2 id="hist-h">이력</h2>
+  <ol class="rows" reversed>
+    <li><span class="when">2026.03 – 2026.11</span><span>(주)시큐아이 기반기술개발팀 콘텐츠그룹 인턴<small>CVE 분석과 Snort 탐지 시그니처 개발, AI 활용 취약점 탐색 선행연구</small></span></li>
+    <li><span class="when">2026.02</span><span>CVE-2025-70327, 70328, 70329 공개<small>K-Shield 주니어 팀 프로젝트 결과</small></span></li>
+    <li><span class="when">2026.02</span><span>남서울대학교 졸업<small>빅데이터경영공학 전공, 컴퓨터소프트웨어학과 복수전공</small></span></li>
+    <li><span class="when">2025.07 – 2025.10</span><span>K-Shield 주니어 취약점 분석 과정 수료 (한국인터넷진흥원, 300시간)<small>웹 취약점(SQL/Command Injection, XSS, CSRF, File Upload)과 시스템 취약점(Stack/Heap Overflow, Race Condition, ROP)</small></span></li>
+    <li><span class="when">2024.06 – 2024.07</span><span>AIoT 정보보안 솔루션 과정 수료 (울산정보산업진흥원, 80시간)<small>Suricata 기반 인라인 IPS 구축과 ELK 로그 수집</small></span></li>
+  </ol>
+</section>
+
+<section class="more" id="skills" aria-labelledby="sk-h">
+  <h2 id="sk-h">기술</h2>
+  <dl class="rows">
+    <div><dt>언어</dt><dd>Python (PoC 작성, 자동화 도구 개발)</dd></div>
+    <div><dt>분석</dt><dd>PHP, Perl, Lua, C 코드 감사, pwndbg, QEMU 펌웨어 에뮬레이션</dd></div>
+    <div><dt>도구</dt><dd>semgrep, Playwright, Docker, Snort, Suricata, ELK Stack</dd></div>
+    <div><dt>AI 활용</dt><dd>Claude Code, Codex CLI를 이용한 멀티 에이전트 구성</dd></div>
+  </dl>
+</section>
+</main>
+
+<footer id="contact">
+  <div class="contact">
+    <a href="https://github.com/BentLock">GitHub</a><a href="https://bentlock.tistory.com/">Tech blog</a>
+    <a href="mailto:kjk05240@gmail.com">kjk05240@gmail.com</a>
+  </div>
+  모든 취약점 연구는 허가된 환경에서 진행했고, 발견한 취약점은 개발사에 먼저 알리는 원칙을 지키고 있습니다.
+</footer>
+</div>
+</body>
+</html>
