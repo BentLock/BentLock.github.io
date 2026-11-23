@@ -50,12 +50,8 @@ h3{font-size:24px;line-height:1.35;letter-spacing:-.02em;margin:0 0 8px}
 .top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-block:24px;font-size:15px;color:var(--muted)}
 .top nav{display:flex;gap:18px;flex-wrap:wrap}
 .top nav a{text-decoration:none} .top nav a:hover{color:var(--ink)}
-header.intro{padding-block:56px 48px;display:grid;grid-template-columns:132px minmax(0,1fr);column-gap:36px;
-  grid-template-areas:"photo name" "photo lead" "photo sub" "photo btns";align-content:start}
-header.intro h1{grid-area:name;font-size:clamp(40px,6vw,60px);line-height:1.1;letter-spacing:-.04em;margin:0 0 20px}
-header.intro .lead{grid-area:lead} header.intro .sub{grid-area:sub} header.intro .contact-btns{grid-area:btns}
-.photo{grid-area:photo;align-self:start;width:132px;aspect-ratio:3/4;border-radius:8px;object-fit:cover}
-.photo-ph{display:grid;place-items:center;border:1.5px dashed var(--ph);color:var(--ph);font-size:13px;text-align:center;line-height:1.5}
+header.intro{padding-block:72px 56px}
+header.intro h1{font-size:clamp(40px,6vw,60px);line-height:1.1;letter-spacing:-.04em;margin:0 0 20px}
 header.intro .lead{font-size:20px;line-height:1.6;max-width:30em;margin:0 0 16px}
 header.intro .sub{color:var(--muted);margin:0}
 .contact-btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
@@ -153,11 +149,8 @@ footer .contact{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px;font-siz
   .more-list{grid-template-columns:1fr}
 }
 @media (max-width:720px){
-  header.intro{padding-block:24px 36px;grid-template-columns:84px minmax(0,1fr);column-gap:20px;
-    grid-template-areas:"photo name" "lead lead" "sub sub" "btns btns"}
-  header.intro h1{align-self:center;margin:0}
-  .photo{width:84px;margin-bottom:20px}
-  .photo-ph{font-size:11px}
+  header.intro{padding-block:32px 40px}
+  header.intro .lead{font-size:18px}
   .cve-list li{grid-template-columns:minmax(0,1fr) auto;gap:2px 12px}
   .cve-target{grid-column:1 / -1;order:2}
   .cve-desc{grid-column:1 / -1;order:3}
@@ -180,10 +173,8 @@ footer .contact{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px;font-siz
 
 <main>
 <header class="intro">
-  <!-- 사진을 넣을 때: <img class="photo" src="files/photo.jpg" alt="이광호 증명사진"> 으로 아래 div를 교체 -->
-  <div class="photo photo-ph" role="img" aria-label="증명사진 자리">[PLACEHOLDER]<br>증명사진<br>3:4</div>
   <h1>이광호</h1>
-  <p class="lead">취약점이 어떻게 성립하는지 많이 보고, 직접 찾아본 경험이 있습니다. 시큐아이에서 탐지 시그니처 약 600개를 개발하며 다양한 CVE를 원인부터 트리거 조건까지 분석했고, K-Shield 팀 프로젝트에서는 공유기 0-day를 찾아 CVE 3건을 받았습니다.</p>
+  <p class="lead">취약점이 어떻게 성립하는지 많이 봤고 직접 찾아보기도 했습니다. 시큐아이에서 탐지 시그니처 약 600개를 개발하며 다양한 CVE를 원인부터 트리거 조건까지 분석했고, K-Shield 팀 프로젝트에서는 공유기 0-day를 찾아 CVE 3건을 받았습니다.</p>
   <p class="sub">현재 시큐아이 인턴 (2026.03 – 2026.11), K-Shield 주니어 수료</p>
   <div class="contact-btns">
     <a class="btn" href="mailto:kjk05240@gmail.com"><span class="btn-k">Email</span>kjk05240@gmail.com</a>
